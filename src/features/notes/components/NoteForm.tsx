@@ -84,7 +84,7 @@ function _NoteForm({ defaultValues }: Props) {
             name="body"
             render={({ field, fieldState }) => (
               <Field data-invalid={fieldState.invalid}>
-                <FieldLabel htmlFor={field.name}>Title</FieldLabel>
+                <FieldLabel htmlFor={field.name}>Body</FieldLabel>
                 <Textarea
                   {...field}
                   id={field.name}
@@ -112,6 +112,33 @@ function _NoteForm({ defaultValues }: Props) {
               disabled={isPending}
               asChild
             >
+              <Link href=".">Cancel</Link>
+            </Button>
+          </Field>
+        </FieldGroup>
+      </FieldSet>
+    </form>
+  )
+}
+
+export function NoteFormSkeleton() {
+  return (
+    <form>
+      <FieldSet>
+        <FieldGroup>
+          <Field>
+            <FieldLabel>Title</FieldLabel>
+            <Input placeholder="Loading..." disabled />
+          </Field>
+
+          <Field>
+            <FieldLabel>Body</FieldLabel>
+            <Textarea placeholder="Loading..." disabled />
+          </Field>
+
+          <Field orientation="horizontal">
+            <Button disabled>Save</Button>
+            <Button variant="outline" type="button" disabled asChild>
               <Link href=".">Cancel</Link>
             </Button>
           </Field>

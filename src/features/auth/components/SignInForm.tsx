@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import z from "zod"
@@ -26,6 +26,7 @@ export function SignInForm() {
 }
 
 function _SignInForm() {
+  const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string>()
 
   const form = useForm<z.infer<typeof signInSchema>>({
@@ -37,8 +38,10 @@ function _SignInForm() {
   })
 
   async function onSubmit(data: z.infer<typeof signInSchema>) {
-    const error = await signInAction(data)
-    setError(error)
+    startTransition(async () => {
+      const error = await signInAction(data)
+      setError(error)
+    })
   }
 
   return (
@@ -58,8 +61,9 @@ function _SignInForm() {
                   id={field.name}
                   type="email"
                   placeholder="maxleiter@example.com"
-                  autoComplete="off"
                   aria-invalid={fieldState.invalid}
+                  disabled={isPending}
+                  autoFocus
                 />
                 {fieldState.error && <FieldError errors={[fieldState.error]} />}
               </Field>
@@ -78,6 +82,7 @@ function _SignInForm() {
                   type="password"
                   placeholder="••••••••"
                   autoComplete="off"
+                  disabled={isPending}
                   aria-invalid={fieldState.invalid}
                 />
                 {fieldState.error && <FieldError errors={[fieldState.error]} />}
@@ -86,9 +91,16 @@ function _SignInForm() {
           />
 
           <Field orientation="horizontal">
-            <Button type="submit">Sign in</Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Signing in" : "Sign in"}
+            </Button>
 
-            <Button variant="outline" type="button" asChild>
+            <Button
+              variant="outline"
+              type="button"
+              disabled={isPending}
+              asChild
+            >
               <Link href="/sign-up">Sign up</Link>
             </Button>
           </Field>

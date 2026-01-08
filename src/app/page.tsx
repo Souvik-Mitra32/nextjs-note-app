@@ -40,5 +40,9 @@ async function PageTitleWithUsername() {
     redirectIfNotFound: true,
   })
 
-  return <h1 className="text-3xl font-semibold">Hi, {user.name}</h1>
+  return (
+    <h1 className="text-3xl font-semibold max-w-[15ch] xs:max-w-[10ch] truncate">
+      Hi, {user.name.split(" ")[0]}
+    </h1>
+  )
 }

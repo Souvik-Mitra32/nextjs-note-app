@@ -21,8 +21,9 @@ export async function addNoteAction(unsafeData: NoteSchema) {
 
   const data = parsed.data
 
+  let newNote: { id: string }
   try {
-    await db
+    ;[newNote] = await db
       .insert(NoteTable)
       .values({ ...data, userId: user.id })
       .returning({ id: NoteTable.id })
@@ -31,7 +32,7 @@ export async function addNoteAction(unsafeData: NoteSchema) {
     return "Unable to add note."
   }
 
-  redirect("/?toast=note_created")
+  redirect(`/${newNote.id}?toast=note_created`)
 }
 
 export async function editNoteAction(id: string, unsafeData: NoteSchema) {
@@ -49,7 +50,7 @@ export async function editNoteAction(id: string, unsafeData: NoteSchema) {
     return "Unable to edit note."
   }
 
-  redirect("/?toast=note_updated")
+  redirect(`/${id}?toast=note_updated`)
 }
 
 export async function deleteNoteAction(id: string) {

@@ -3,7 +3,10 @@ import { notFound } from "next/navigation"
 
 import { db } from "@/drizzle/db"
 
-import { NoteForm } from "@/features/notes/components/NoteForm"
+import {
+  NoteForm,
+  NoteFormSkeleton,
+} from "@/features/notes/components/NoteForm"
 
 type Props = {
   params: Promise<{ noteId: string }>
@@ -16,7 +19,7 @@ export default function EditNotePage(props: Props) {
         <h1 className="text-3xl font-semibold">Edit note</h1>
       </div>
 
-      <Suspense>
+      <Suspense fallback={<NoteFormSkeleton />}>
         <NoteFormWithDefaultValues {...props} />
       </Suspense>
     </>

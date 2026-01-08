@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useTransition } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import z from "zod"
@@ -26,6 +26,7 @@ export function SignUpForm() {
 }
 
 function _SignUpForm() {
+  const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string>()
 
   const form = useForm<z.infer<typeof signUpSchema>>({
@@ -38,8 +39,10 @@ function _SignUpForm() {
   })
 
   async function onSubmit(data: z.infer<typeof signUpSchema>) {
-    const error = await signUpAction(data)
-    setError(error)
+    startTransition(async () => {
+      const error = await signUpAction(data)
+      setError(error)
+    })
   }
 
   return (
@@ -60,6 +63,7 @@ function _SignUpForm() {
                   placeholder="Max Leiter"
                   autoComplete="off"
                   aria-invalid={fieldState.invalid}
+                  disabled={isPending}
                   autoFocus
                 />
                 {fieldState.error && <FieldError errors={[fieldState.error]} />}
@@ -79,6 +83,7 @@ function _SignUpForm() {
                   type="email"
                   placeholder="maxleiter@example.com"
                   autoComplete="off"
+                  disabled={isPending}
                   aria-invalid={fieldState.invalid}
                 />
                 {fieldState.error && <FieldError errors={[fieldState.error]} />}
@@ -98,6 +103,7 @@ function _SignUpForm() {
                   type="password"
                   placeholder="••••••••"
                   autoComplete="off"
+                  disabled={isPending}
                   aria-invalid={fieldState.invalid}
                 />
                 {fieldState.error && <FieldError errors={[fieldState.error]} />}
@@ -106,9 +112,16 @@ function _SignUpForm() {
           />
 
           <Field orientation="horizontal">
-            <Button type="submit">Sign up</Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Signing up" : "Sign up"}
+            </Button>
 
-            <Button variant="outline" type="button" asChild>
+            <Button
+              variant="outline"
+              type="button"
+              disabled={isPending}
+              asChild
+            >
               <Link href="/sign-in">Sign in</Link>
             </Button>
           </Field>
