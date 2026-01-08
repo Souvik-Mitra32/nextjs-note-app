@@ -1,6 +1,7 @@
 "use server"
 
 import { redirect } from "next/navigation"
+import { updateTag } from "next/cache"
 import { eq } from "drizzle-orm"
 
 import { db } from "@/drizzle/db"
@@ -27,6 +28,9 @@ export async function addNoteAction(unsafeData: NoteSchema) {
       .insert(NoteTable)
       .values({ ...data, userId: user.id })
       .returning({ id: NoteTable.id })
+
+    updateTag("global:notes")
+    updateTag(`id:${newNote.id}-notes`)
   } catch (err) {
     console.error(err)
     return "Unable to add note."
@@ -45,6 +49,9 @@ export async function editNoteAction(id: string, unsafeData: NoteSchema) {
 
   try {
     await db.update(NoteTable).set(data).where(eq(NoteTable.id, id))
+
+    updateTag("global:notes")
+    updateTag(`id:${id}-notes`)
   } catch (err) {
     console.error(err)
     return "Unable to edit note."
@@ -58,6 +65,8 @@ export async function deleteNoteAction(id: string) {
 
   try {
     await db.delete(NoteTable).where(eq(NoteTable.id, id))
+    updateTag("global:notes")
+    updateTag(`id:${id}-notes`)
   } catch (err) {
     console.error(err)
     return "Unable to delete note."

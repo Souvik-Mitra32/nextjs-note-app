@@ -2,8 +2,9 @@ import { Suspense } from "react"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 
-import { db } from "@/drizzle/db"
 import { deleteNoteAction } from "@/features/notes/actions/action"
+
+import { getNoteById } from "@/features/notes/data-access/queries"
 
 import { Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -22,14 +23,7 @@ export default function NoteDetailsPage(props: Props) {
 
 async function NoteDetails({ params }: Props) {
   const { noteId } = await params
-  const note = await db.query.NoteTable.findFirst({
-    columns: {
-      id: true,
-      title: true,
-      body: true,
-    },
-    where: (t, f) => f.eq(t.id, noteId),
-  })
+  const note = await getNoteById(noteId)
 
   if (!note) return notFound()
 

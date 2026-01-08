@@ -1,7 +1,8 @@
 import Link from "next/link"
-import { db } from "@/drizzle/db"
 
 import { getCurrentUser } from "@/features/auth/lib/currentUser"
+
+import { getNotesByUserId } from "../data-access/queries"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,10 +20,7 @@ export async function NoteList() {
     withFullUser: false,
     redirectIfNotFound: true,
   })
-  const notes = await db.query.NoteTable.findMany({
-    columns: { id: true, title: true, body: true },
-    where: (t, f) => f.eq(t.userId, user.id),
-  })
+  const notes = await getNotesByUserId(user.id)
 
   return notes.length === 0 ? (
     <Empty>

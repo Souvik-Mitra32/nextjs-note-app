@@ -1,7 +1,7 @@
 import { Suspense } from "react"
 import { notFound } from "next/navigation"
 
-import { db } from "@/drizzle/db"
+import { getNoteById } from "@/features/notes/data-access/queries"
 
 import {
   NoteForm,
@@ -28,14 +28,7 @@ export default function EditNotePage(props: Props) {
 
 async function NoteFormWithDefaultValues({ params }: Props) {
   const { noteId } = await params
-  const note = await db.query.NoteTable.findFirst({
-    columns: {
-      id: true,
-      title: true,
-      body: true,
-    },
-    where: (t, f) => f.eq(t.id, noteId),
-  })
+  const note = await getNoteById(noteId)
 
   if (!note) return notFound()
 
