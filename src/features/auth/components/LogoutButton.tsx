@@ -3,13 +3,13 @@
 import { useTransition } from "react"
 
 import { Button } from "@/components/ui/button"
-import { logout } from "../actions/action"
+import { logoutAction } from "../actions/action"
 
 export function LogoutButton() {
   const [isPending, startTransition] = useTransition()
 
   function handleLogout() {
-    startTransition(async () => await logout())
+    startTransition(async () => await logoutAction())
   }
 
   return (

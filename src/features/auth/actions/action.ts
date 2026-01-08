@@ -5,10 +5,11 @@ import { redirect } from "next/navigation"
 import z from "zod"
 
 import { db } from "@/drizzle/db"
-import { UserTable } from "@/drizzle/schema"
+import { OAuthProvider, UserTable } from "@/drizzle/schema"
 
 import { signInSchema, signUpSchema } from "./schema"
 
+import { getOAuthClient } from "../lib/oAuth/base"
 import { createUserSession, removeUserFromSession } from "../lib/session"
 import {
   comparePasswords,
@@ -72,8 +73,14 @@ export async function signInAction(unsafeData: z.infer<typeof signInSchema>) {
   redirect("/")
 }
 
-export async function logout() {
+export async function logoutAction() {
   await removeUserFromSession(await cookies())
 
   redirect("/")
+}
+
+export async function oAuthSignInAction(provider: OAuthProvider) {
+  const oAuthClient = getOAuthClient(provider)
+
+  return oAuthClient.createAuthUrl(await cookies())
 }

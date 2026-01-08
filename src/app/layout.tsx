@@ -1,9 +1,10 @@
+import { Suspense } from "react"
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
-import { ToastListener } from "@/components/ToastListener"
+
 import { Toaster } from "sonner"
-import { Suspense } from "react"
+import { ToastListener } from "@/components/ToastListener"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
