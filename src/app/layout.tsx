@@ -1,6 +1,9 @@
 import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
+import { ToastListener } from "@/components/ToastListener"
+import { Toaster } from "sonner"
+import { Suspense } from "react"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,6 +33,11 @@ export default function RootLayout({
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 my-4 sm:my-6 lg:my-8">
           <div className="flex flex-col gap-7">{children}</div>
         </div>
+
+        <Toaster />
+        <Suspense>
+          <ToastListener />
+        </Suspense>
       </body>
     </html>
   )
