@@ -5,8 +5,15 @@ import { getCurrentUser } from "@/features/auth/lib/currentUser"
 import { getNotesByUserId } from "../data-access/queries"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import {
   Empty,
   EmptyContent,
@@ -47,15 +54,36 @@ export async function NoteList() {
   )
 }
 
-function NoteCard({ title, body }: { title: string; body: string | null }) {
+function NoteCard({
+  title,
+  body,
+  noteTags,
+}: {
+  title: string
+  body: string | null
+  noteTags: { tag: { id: string; name: string } }[]
+}) {
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle className="wrap-anywhere">{title}</CardTitle>
+        {noteTags.length > 0 && (
+          <CardDescription>
+            <div className="flex w-full flex-wrap gap-2">
+              {noteTags.map(({ tag }) => (
+                <Badge key={tag.id} variant="secondary">
+                  {tag.name}
+                </Badge>
+              ))}
+            </div>
+          </CardDescription>
+        )}
       </CardHeader>
-      <CardContent>
-        {body && <p className="line-clamp-2">{body}</p>}
-      </CardContent>
+      {body && (
+        <CardContent>
+          <p className="line-clamp-2">{body}</p>
+        </CardContent>
+      )}
     </Card>
   )
 }

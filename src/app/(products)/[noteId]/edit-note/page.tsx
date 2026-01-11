@@ -1,7 +1,9 @@
 import { Suspense } from "react"
 import { notFound } from "next/navigation"
 
+import { getCurrentUser } from "@/features/auth/lib/currentUser"
 import { getNoteById } from "@/features/notes/data-access/queries"
+import { getTagsByUserId } from "@/features/tags/data-access/queries"
 
 import {
   NoteForm,
@@ -27,10 +29,29 @@ export default function EditNotePage(props: Props) {
 }
 
 async function NoteFormWithDefaultValues({ params }: Props) {
+  const user = await getCurrentUser({
+    withFullUser: false,
+    redirectIfNotFound: true,
+  })
+
   const { noteId } = await params
-  const note = await getNoteById(noteId)
+  const [note, tags] = await Promise.all([
+    getNoteById(noteId),
+    getTagsByUserId(user.id),
+  ])
 
   if (!note) return notFound()
 
-  return <NoteForm defaultValues={note} />
+  const tagOptions = tags.map((tag) => ({ label: tag.name, value: tag.id }))
+  const selectedTags = note.noteTags.map(({ tag }) => ({
+    label: tag.name,
+    value: tag.id,
+  }))
+
+  return (
+    <NoteForm
+      defaultValues={{ ...note, tags: selectedTags }}
+      tagOptions={tagOptions}
+    />
+  )
 }

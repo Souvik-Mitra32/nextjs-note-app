@@ -5,10 +5,9 @@ import { UserTable } from "./users"
 import { NoteTagTable } from "./notesTags"
 import { createdAt, id, updatedAt } from "../schemaHelpers"
 
-export const NoteTable = pgTable("notes", {
+export const TagTable = pgTable("tags", {
   id,
-  title: text().notNull(),
-  body: text(),
+  name: text().notNull(),
   userId: uuid("user_id")
     .references(() => UserTable.id, { onDelete: "cascade" })
     .notNull(),
@@ -16,10 +15,10 @@ export const NoteTable = pgTable("notes", {
   updatedAt,
 })
 
-export const noteRelations = relations(NoteTable, ({ one, many }) => ({
+export const tagRelations = relations(TagTable, ({ one, many }) => ({
   user: one(UserTable, {
-    fields: [NoteTable.userId],
+    fields: [TagTable.userId],
     references: [UserTable.id],
   }),
-  noteTags: many(NoteTagTable),
+  tagNotes: many(NoteTagTable),
 }))

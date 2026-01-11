@@ -1,3 +1,5 @@
 export * from "./schemas/users"
-export * from "./schemas/notes"
 export * from "./schemas/userOAuthAccounts"
+export * from "./schemas/notes"
+export * from "./schemas/tags"
+export * from "./schemas/notesTags"

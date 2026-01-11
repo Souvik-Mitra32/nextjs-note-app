@@ -8,6 +8,7 @@ import { getNoteById } from "@/features/notes/data-access/queries"
 
 import { Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { DeleteButton } from "@/components/DeleteButton"
 
@@ -30,7 +31,21 @@ async function NoteDetails({ params }: Props) {
   return (
     <>
       <div className="flex flex-wrap justify-between items-start gap-4">
-        <h1 className="text-3xl font-semibold max-w-[40%]">{note.title}</h1>
+        <div className="flex flex-col w-full sm:max-w-[40%] flex-1 gap-2">
+          <h1 className="text-3xl font-semibold wrap-break-word">
+            {note.title}
+          </h1>
+
+          {note.noteTags.length > 0 && (
+            <div className="flex w-full flex-wrap gap-2">
+              {note.noteTags.map(({ tag }) => (
+                <Badge key={tag.id} variant="secondary">
+                  {tag.name}
+                </Badge>
+              ))}
+            </div>
+          )}
+        </div>
 
         <div className="flex flex-wrap items-center gap-2 md:flex-row">
           <Button asChild>
@@ -54,7 +69,7 @@ function NoteDetailsSkeleton() {
   return (
     <>
       <div className="flex flex-wrap justify-between gap-4">
-        <Skeleton className="h-7.5 w-[30%]" />
+        <Skeleton className="h-7.5 w-full sm:max-w-[40%]" />
 
         <div className="flex flex-wrap items-center gap-2 md:flex-row">
           <Button disabled>Edit</Button>
