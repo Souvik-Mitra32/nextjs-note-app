@@ -43,6 +43,13 @@
       "when": 1767977070532,
       "tag": "0005_amazing_wild_pack",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1768191385177,
+      "tag": "0006_bright_nicolaos",
+      "breakpoints": true
     }
   ]
 }

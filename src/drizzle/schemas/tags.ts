@@ -7,7 +7,7 @@ import { createdAt, id, updatedAt } from "../schemaHelpers"
 
 export const TagTable = pgTable("tags", {
   id,
-  name: text().notNull(),
+  name: text().unique().notNull(),
   userId: uuid("user_id")
     .references(() => UserTable.id, { onDelete: "cascade" })
     .notNull(),

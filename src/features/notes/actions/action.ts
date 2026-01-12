@@ -84,77 +84,67 @@ export async function editNoteAction(id: string, unsafeData: NoteSchema) {
   const parsed = noteSchema.safeParse(unsafeData)
   if (!parsed.success) return "Invalid input."
 
-  const data = parsed.data
+  const incomingTags = parsed.data.tags.map((t) => t.label)
 
-  let editedNote: {
-    id: string
-    tags: string[]
-  }
-  try {
-    editedNote = await db.transaction(async (tx) => {
+  const editedNote = await db
+    .transaction(async (tx) => {
       const note = await tx.query.NoteTable.findFirst({
         columns: { id: true },
         where: (t, f) => f.eq(t.id, id),
-        with: {
-          noteTags: {
-            columns: {},
-            with: {
-              tag: {
-                columns: {
-                  id: true,
-                  name: true,
-                },
-              },
-            },
-          },
-        },
       })
-
       if (!note) throw new Error("Note not found.")
 
-      await tx.update(NoteTable).set(data).where(eq(NoteTable.id, note.id))
+      await tx
+        .update(NoteTable)
+        .set(parsed.data)
+        .where(eq(NoteTable.id, note.id))
 
-      const incomingTags = data.tags.map((tag) => tag.label)
-      const existingTags = note.noteTags.map(({ tag }) => tag.name)
-      const uniqueTags = Array.from(
-        new Set([...existingTags, ...incomingTags])
-      ).map((i) => i)
+      const allTags = await tx.query.TagTable.findMany({
+        columns: { id: true, name: true },
+        with: { tagNotes: { columns: { noteId: true } } },
+      })
 
-      const toAdd = uniqueTags.filter(
-        (tag) => !existingTags.find((t) => t === tag)
-      )
-      const toRemove = uniqueTags.filter(
-        (tag) => !incomingTags.find((t) => t == tag)
+      const allNames = allTags.map((t) => t.name)
+
+      const existingNames = allTags
+        .filter((t) => t.tagNotes.some((n) => n.noteId === note.id))
+        .map((t) => t.name)
+
+      const toCreate = incomingTags.filter((name) => !allNames.includes(name))
+      const toAdd = incomingTags.filter((name) => !existingNames.includes(name))
+      const toRemove = existingNames.filter(
+        (name) => !incomingTags.includes(name)
       )
 
       const addedTagIds: string[] = []
       const removedTagIds: string[] = []
 
-      if (toAdd.length > 0) {
-        const tags = await tx
+      if (toCreate.length) {
+        const inserted = await tx
           .insert(TagTable)
-          .values(toAdd.map((tag) => ({ name: tag, userId: user.id })))
+          .values(toCreate.map((name) => ({ name, userId: user.id })))
           .returning({ id: TagTable.id })
 
-        tags.forEach((tag) => addedTagIds.push(tag.id))
+        inserted.forEach((r) => addedTagIds.push(r.id))
+      }
 
+      const toAddIds = allTags
+        .filter((t) => toAdd.includes(t.name))
+        .map((t) => t.id)
+      addedTagIds.push(...toAddIds)
+
+      if (addedTagIds.length) {
         await tx
           .insert(NoteTagTable)
           .values(addedTagIds.map((tagId) => ({ noteId: note.id, tagId })))
       }
 
-      if (toRemove.length > 0) {
-        const tags = await Promise.all(
-          toRemove.map((tagName) =>
-            tx.query.TagTable.findFirst({
-              columns: { id: true },
-              where: (t, f) => f.eq(t.name, tagName),
-            })
-          )
-        )
+      const toRemoveIds = allTags
+        .filter((t) => toRemove.includes(t.name))
+        .map((t) => t.id)
+      removedTagIds.push(...toRemoveIds)
 
-        tags.forEach((tag) => tag && removedTagIds.push(tag.id))
-
+      if (removedTagIds.length) {
         await Promise.all(
           removedTagIds.map((tagId) =>
             tx
@@ -169,19 +159,21 @@ export async function editNoteAction(id: string, unsafeData: NoteSchema) {
         )
       }
 
-      return { id: note.id, tags: [...addedTagIds, ...removedTagIds] }
+      return { id: note.id, added: addedTagIds, removed: removedTagIds }
     })
-  } catch (err) {
-    console.error(err)
-    return "Unable to edit note."
-  }
+    .catch(() => {
+      return "Unable to edit note."
+    })
+
+  if (typeof editedNote === "string") return editedNote
 
   updateTag("global:notes")
   updateTag(`id:${editedNote.id}-notes`)
 
-  if (editedNote.tags.length > 0) {
+  const allTouched = [...editedNote.added, ...editedNote.removed]
+  if (allTouched.length) {
     updateTag("global:tags")
-    editedNote.tags.forEach((tag) => updateTag(`id:${tag}-tags`))
+    allTouched.forEach((id) => updateTag(`id:${id}-tags`))
   }
 
   redirect(`/${id}?toast=note_updated`)
@@ -190,9 +182,8 @@ export async function editNoteAction(id: string, unsafeData: NoteSchema) {
 export async function deleteNoteAction(id: string) {
   await getCurrentUser({ withFullUser: false, redirectIfNotFound: true })
 
-  let deletedNote: { id: string; tags: string[] }
-  try {
-    deletedNote = await db.transaction(async (tx) => {
+  const deletedNote = await db
+    .transaction(async (tx) => {
       const note = await tx.query.NoteTable.findFirst({
         columns: { id: true },
         where: (t, f) => f.eq(t.id, id),
@@ -228,10 +219,9 @@ export async function deleteNoteAction(id: string) {
 
       return { id: note.id, tags: removedTagIds }
     })
-  } catch (err) {
-    console.error(err)
-    return "Unable to delete note."
-  }
+    .catch(() => "Unable to delete note.")
+
+  if (typeof deletedNote === "string") return deletedNote
 
   updateTag("global:notes")
   updateTag(`id:${id}-notes`)

@@ -22,6 +22,12 @@ export function ToastListener() {
       case "note_deleted":
         toast.success("Note deleted successfully")
         break
+      case "tags_updated":
+        toast.success("Tags updated successfully")
+        break
+      case "tag_deleted":
+        toast.success("Tag deleted successfully")
+        break
     }
 
     // remove query param after showing toast

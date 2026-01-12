@@ -5,13 +5,16 @@ import { useTransition } from "react"
 import { Trash2 } from "lucide-react"
 
 import { Button } from "./ui/button"
+import { ButtonIcon } from "@/lib/types"
 
 export function DeleteButton({
   id,
   onClick,
+  icon = "none",
 }: {
   id: string
   onClick: (id: string) => Promise<string>
+  icon?: ButtonIcon
 }) {
   const [isPending, startTransition] = useTransition()
 
@@ -22,9 +25,14 @@ export function DeleteButton({
   }
 
   return (
-    <Button variant="destructive" onClick={handleDelete} disabled={isPending}>
-      <Trash2 />
-      {isPending ? "Deleting" : "Delete"}
+    <Button
+      variant="destructiveOutline"
+      onClick={handleDelete}
+      disabled={isPending}
+    >
+      {(icon === "leading" || icon === "only") && <Trash2 />}
+      {icon !== "only" ? (isPending ? "Deleting" : "Delete") : null}
+      {icon === "trailing" && <Trash2 />}
     </Button>
   )
 }

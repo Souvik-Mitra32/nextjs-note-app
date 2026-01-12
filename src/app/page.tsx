@@ -5,10 +5,12 @@ import { getCurrentUser } from "@/features/auth/lib/currentUser"
 
 import { Button } from "@/components/ui/button"
 import { LogoutButton } from "@/features/auth/components/LogoutButton"
+import { TagDialog } from "@/features/tags/components/TagDialog"
 import {
   NoteList,
   NoteListSkeleton,
 } from "@/features/notes/components/NoteList"
+import { db } from "@/drizzle/db"
 
 export default function HomePage() {
   return (
@@ -23,7 +25,11 @@ export default function HomePage() {
             <Link href="/add-note">Add note</Link>
           </Button>
 
-          <LogoutButton />
+          <Suspense /*{TODO: Add fallback}*/>
+            <TagDialogButton />
+          </Suspense>
+
+          <LogoutButton icon="only" />
         </div>
       </div>
 
@@ -45,4 +51,18 @@ async function PageTitleWithUsername() {
       Hi, {user.name.split(" ")[0]}
     </h1>
   )
+}
+
+async function TagDialogButton() {
+  const user = await getCurrentUser({
+    withFullUser: true,
+    redirectIfNotFound: true,
+  })
+
+  const tags = await db.query.TagTable.findMany({
+    columns: { id: true, name: true },
+    where: (t, f) => f.eq(t.userId, user.id),
+  })
+
+  return <TagDialog tags={tags} />
 }
