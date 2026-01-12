@@ -34,7 +34,8 @@ export async function addNoteAction(unsafeData: NoteSchema) {
         data.tags.map(async (tag) => {
           const existing = await tx.query.TagTable.findFirst({
             columns: { id: true },
-            where: (t, f) => f.eq(t.name, tag.label),
+            where: (t, f) =>
+              f.and(eq(t.name, tag.label), eq(t.userId, user.id)),
           })
 
           if (existing) return existing.id
@@ -101,6 +102,7 @@ export async function editNoteAction(id: string, unsafeData: NoteSchema) {
 
       const allTags = await tx.query.TagTable.findMany({
         columns: { id: true, name: true },
+        where: (t, f) => f.eq(t.userId, user.id),
         with: { tagNotes: { columns: { noteId: true } } },
       })
 

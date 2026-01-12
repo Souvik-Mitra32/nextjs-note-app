@@ -5,6 +5,7 @@ import { redirect } from "next/navigation"
 import { getUserFromSession } from "./session"
 
 import { db } from "@/drizzle/db"
+import { cacheTag } from "next/cache"
 
 type FullUser = Exclude<
   Awaited<ReturnType<typeof getUserFromDb>>,
@@ -49,6 +50,7 @@ async function _getCurrentUser({
   if (!withFullUser) return user
 
   const fullUser = await getUserFromDb(user.id)
+
   if (fullUser == null) throw new Error("User not found in database") // This should not happen
 
   return fullUser

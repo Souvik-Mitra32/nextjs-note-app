@@ -2,6 +2,7 @@ import z from "zod"
 import crypto from "crypto"
 
 import { redisClient } from "./redis"
+import { updateTag } from "next/cache"
 
 // Seven days in seconds
 const SESSION_EXPIRATION_IN_SECONDS = 60 * 60 * 24 * 7

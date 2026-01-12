@@ -21,6 +21,7 @@ import {
 
 import { TagSchema, tagSchema } from "../actions/schema"
 import { deleteTagAction, editTagsBatchAction } from "../actions/action"
+import { toast } from "sonner"
 
 export function TagDialog({ tags }: { tags: { id: string; name: string }[] }) {
   const [open, setOpen] = useState(false)
@@ -37,6 +38,17 @@ export function TagDialog({ tags }: { tags: { id: string; name: string }[] }) {
     startTransition(async () => {
       const error = await editTagsBatchAction(data)
       setError(error)
+    })
+  }
+
+  function handleDelete(id: string) {
+    startTransition(async () => {
+      const res = await deleteTagAction(id)
+      if (res.success) {
+        toast.success("Tag deleted successfully")
+      } else {
+        setError(error)
+      }
     })
   }
 
@@ -75,6 +87,7 @@ export function TagDialog({ tags }: { tags: { id: string; name: string }[] }) {
                         placeholder="Tag name"
                         aria-invalid={fieldState.invalid}
                         autoFocus={index === 0}
+                        disabled={isPending}
                       />
                       {fieldState.error && (
                         <FieldError errors={[fieldState.error]} />
@@ -84,9 +97,9 @@ export function TagDialog({ tags }: { tags: { id: string; name: string }[] }) {
                 />
 
                 <DeleteButton
-                  id={tag.id}
-                  onClick={deleteTagAction}
+                  onClick={() => handleDelete(tag.id)}
                   icon="only"
+                  isLoading={isPending}
                 />
               </div>
             ))}

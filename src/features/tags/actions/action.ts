@@ -60,24 +60,24 @@ export async function editTagsBatchAction(unsafeData: TagSchema) {
 
     const updated = await Promise.all(
       existing.map(async (tag) => {
-        if (tag.name === tag.newName) {
+        if (tag.name === tag.newName)
           return { id: tag.id, tagNotes: tag.tagNotes }
-        }
 
         const [u] = await tx
           .update(TagTable)
           .set({ name: tag.newName })
           .where(eq(TagTable.id, tag.id))
           .returning({ id: TagTable.id })
+          .catch(() => ["Duplicate tag(s) found."])
 
-        if (!u) return null
+        if (typeof u === "string") return null
 
         return { id: u.id, tagNotes: tag.tagNotes }
       })
     )
 
     if (updated.some((t) => t === null)) {
-      return { success: false, error: "Duplicate tag(s) found." }
+      return { success: false, error: "Duplicate tags are not allowed." }
     }
 
     return { success: true, data: updated as Success["data"] }
@@ -102,63 +102,55 @@ export async function editTagsBatchAction(unsafeData: TagSchema) {
 export async function deleteTagAction(id: string) {
   await getCurrentUser({ withFullUser: false, redirectIfNotFound: true })
 
-  type Success = {
-    success: true
-    data: { id: string; tagNotes: { noteId: string }[] }
-  }
-
-  type Failure = {
-    success: false
-    error: string
-  }
-
-  type Result = Success | Failure
-
-  const result: Result = await db.transaction(async (tx) => {
-    const tag = await tx.query.TagTable.findFirst({
-      columns: { id: true },
-      where: (t, f) => f.eq(t.id, id),
-      with: {
-        tagNotes: {
-          columns: { noteId: true, tagId: true },
+  const result = await db
+    .transaction(async (tx) => {
+      const tag = await tx.query.TagTable.findFirst({
+        columns: { id: true },
+        where: (t, f) => f.eq(t.id, id),
+        with: {
+          tagNotes: {
+            columns: { noteId: true, tagId: true },
+          },
         },
-      },
-    })
-
-    if (!tag) return { success: false, error: "Tag not found." }
-
-    const loaded = await Promise.all(
-      tag.tagNotes.map(async ({ noteId, tagId }) => {
-        const [d] = await tx
-          .delete(NoteTagTable)
-          .where(
-            and(eq(NoteTagTable.noteId, noteId), eq(NoteTagTable.tagId, tagId))
-          )
-          .returning({ noteId: NoteTagTable.noteId })
-        if (!d) return null
-        return d
       })
-    )
 
-    if (loaded.some((n) => n === null))
-      return { success: false, error: "Failed to delete." }
+      if (!tag) throw new Error("Tag not found.")
 
-    const deletedTagFromNotes = loaded as { noteId: string }[]
+      const loaded = await Promise.all(
+        tag.tagNotes.map(async ({ noteId, tagId }) => {
+          const [d] = await tx
+            .delete(NoteTagTable)
+            .where(
+              and(
+                eq(NoteTagTable.noteId, noteId),
+                eq(NoteTagTable.tagId, tagId)
+              )
+            )
+            .returning({ noteId: NoteTagTable.noteId })
+          if (!d) return null
+          return d
+        })
+      )
 
-    const [deletedTag] = await tx
-      .delete(TagTable)
-      .where(eq(TagTable.id, tag.id))
-      .returning({ id: TagTable.id })
+      if (loaded.some((n) => n === null)) throw new Error("Failed to delete.")
 
-    if (!deletedTag) return { success: false, error: "Failed to delete." }
+      const deletedTagFromNotes = loaded as { noteId: string }[]
 
-    return {
-      success: true,
-      data: { id: deletedTag.id, tagNotes: deletedTagFromNotes },
-    }
-  })
+      const [deletedTag] = await tx
+        .delete(TagTable)
+        .where(eq(TagTable.id, tag.id))
+        .returning({ id: TagTable.id })
 
-  if (!result.success) return result.error
+      if (!deletedTag) throw new Error("Failed to delete.")
+
+      return {
+        success: true,
+        data: { id: deletedTag.id, tagNotes: deletedTagFromNotes },
+      }
+    })
+    .catch(() => "Failed to delete tag.")
+
+  if (typeof result === "string") return { success: false, error: result }
 
   updateTag("global:tags")
   updateTag(`id:${result.data.id}-tags`)
@@ -170,5 +162,5 @@ export async function deleteTagAction(id: string) {
     }
   }
 
-  redirect("/?toast=tag_deleted")
+  return { success: true }
 }

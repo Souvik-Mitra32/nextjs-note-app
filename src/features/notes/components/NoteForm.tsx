@@ -1,6 +1,6 @@
 "use client"
 
-import { Suspense, useState, useTransition } from "react"
+import { useState, useTransition } from "react"
 import { Controller, useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { usePathname } from "next/navigation"
@@ -155,7 +155,7 @@ function _NoteForm({ defaultValues, tagOptions }: Props) {
 
 export function NoteFormSkeleton() {
   return (
-    <form>
+    <form className="w-full max-w-md">
       <FieldSet>
         <FieldGroup>
           <Field>

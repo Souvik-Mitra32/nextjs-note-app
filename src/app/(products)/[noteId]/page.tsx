@@ -2,15 +2,13 @@ import { Suspense } from "react"
 import { notFound } from "next/navigation"
 import Link from "next/link"
 
-import { deleteNoteAction } from "@/features/notes/actions/action"
-
 import { getNoteById } from "@/features/notes/data-access/queries"
+import { NoteDetailsButtonGroup } from "@/features/notes/components/NoteDetailsButtonGroup"
 
 import { Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
-import { DeleteButton } from "@/components/DeleteButton"
 
 type Props = { params: Promise<{ noteId: string }> }
 
@@ -47,17 +45,7 @@ async function NoteDetails({ params }: Props) {
           )}
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 md:flex-row">
-          <Button asChild>
-            <Link href={`/${note.id}/edit-note`}>Edit</Link>
-          </Button>
-
-          <DeleteButton id={note.id} onClick={deleteNoteAction} />
-
-          <Button variant="outline" asChild>
-            <Link href=".">Back</Link>
-          </Button>
-        </div>
+        <NoteDetailsButtonGroup id={note.id} />
       </div>
 
       {note.body && <p>{note.body}</p>}

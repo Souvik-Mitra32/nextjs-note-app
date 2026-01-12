@@ -13,6 +13,7 @@ import {
 import { db } from "@/drizzle/db"
 
 export default function HomePage() {
+  console.log("render") // log
   return (
     <>
       <div className="flex flex-wrap justify-between gap-4">
@@ -25,7 +26,13 @@ export default function HomePage() {
             <Link href="/add-note">Add note</Link>
           </Button>
 
-          <Suspense /*{TODO: Add fallback}*/>
+          <Suspense
+            fallback={
+              <Button variant="outline" disabled>
+                Edit tags
+              </Button>
+            }
+          >
             <TagDialogButton />
           </Suspense>
 
